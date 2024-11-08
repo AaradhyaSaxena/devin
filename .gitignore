@@ -1,0 +1,7 @@
+secret.json
+.ipynb_checkpoints/
+.DS_Store
+devin_env/
+chroma_db/
+__pycache__/
+codebase/
