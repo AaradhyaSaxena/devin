@@ -5,7 +5,7 @@ from langchain.prompts import ChatPromptTemplate
 class LLMChain:
     def __init__(self, df):
         self.df = df
-        self.llm = ChatVertexAI(model="gemini-1.5-flash")
+        self.llm = ChatVertexAI(model="gemini-1.5-pro")
         self.load_prompts()
         self.chain = self.setup_chain()
 
@@ -31,10 +31,22 @@ class LLMChain:
         reference_codes = []
         for filepath in filepaths:
             try:
-                file_data = self.df[self.df['File Path'] == filepath]
+                file_data = self.df[self.df['Path'] == filepath]
                 if not file_data.empty:
-                    content = file_data.iloc[0]['Content']
-                    reference_codes.append(f"{filepath}: {content}")
+                    if file_data.iloc[0]['Type'] == 'directory':
+                        # Get all files under this directory
+                        dir_files = self.df[
+                            (self.df['Type'] == 'file') & 
+                            (self.df['Path'].str.startswith(filepath))
+                        ]
+                        for _, file_row in dir_files.iterrows():
+                            reference_codes.append(
+                                f"{file_row['Path']}: {file_row['Content']}"
+                            )
+                    else:
+                        # Handle single file
+                        content = file_data.iloc[0]['Content']
+                        reference_codes.append(f"{filepath}: {content}")
             except Exception as e:
                 print(f"Error getting reference code for {filepath}: {str(e)}")
         
@@ -50,20 +62,17 @@ class LLMChain:
                 "question": lambda x: x["question"],
                 "context_intro": lambda x: self.prompt_components["context_intro"],
                 "context": lambda x: self.get_reference_code(x["reference_filepaths"]),
-                "output_files_intro": lambda x: self.prompt_components["output_files_intro"],
-                "output_files": lambda x: self.get_reference_code(x["output_files"]),
-                "output_format": lambda x: self.prompt_components["output_format"],
+                "output_instructions": lambda x: self.prompt_components["output_instructions"],
                 "format_instructions": lambda x: self.prompt_components["format_instructions"]
             }
             | self.prompt_template
             | self.llm
         )
 
-    def invoke(self, query, reference_filepaths=None, output_files=None):
+    def invoke(self, query, reference_filepaths=None):
         input_data = {
             "question": query,
-            "reference_filepaths": reference_filepaths if reference_filepaths else [],
-            "output_files": output_files if output_files else []
+            "reference_filepaths": reference_filepaths if reference_filepaths else []
         }
         
         return self.chain.invoke(input_data).content

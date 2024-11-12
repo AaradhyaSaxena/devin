@@ -40,15 +40,13 @@ class APP:
             data = request.json
             query = data.get('query')
             reference_filepaths = data.get('reference_filepaths', [])
-            output_files = data.get('output_files', [])
             
             if not query:
                 return jsonify({"error": "Missing query"}), 400
             
             result = self.code_generation_engine.generate_code(
                 query=query,
-                reference_filepaths=reference_filepaths,
-                output_files=output_files
+                reference_filepaths=reference_filepaths
             )
             return jsonify({"code": result})
 

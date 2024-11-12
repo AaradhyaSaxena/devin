@@ -17,7 +17,7 @@ st.title("PACE")
 if "file_list" not in st.session_state:
     try:
         df = pd.read_csv('data/repo_content.csv')
-        st.session_state.file_list = df['File Path'].tolist()
+        st.session_state.file_list = df['Path'].tolist()
     except Exception as e:
         st.error(f"Error reading file list: {str(e)}")
         st.session_state.file_list = []
@@ -38,13 +38,6 @@ with st.form("code_generation_form"):
         default=[]
     )
     
-    # Output files selection
-    output_files = st.multiselect(
-        "Select output files:",
-        options=st.session_state.file_list,
-        default=[]
-    )
-    
     # Submit button
     submitted = st.form_submit_button("Generate Code")
 
@@ -53,16 +46,14 @@ if submitted and query:
     # Prepare the request payload
     payload = {
         "query": query,
-        "reference_filepaths": reference_files,
-        "output_files": output_files
+        "reference_filepaths": reference_files
     }
     
     # Add user query to chat history
     st.session_state.messages.append({
         "role": "user", 
         "content": f"""Query: {query}
-            Reference Files: {', '.join(reference_files) if reference_files else 'None'}
-            Output Files: {', '.join(output_files) if output_files else 'None'}"""
+            Reference Files: {', '.join(reference_files) if reference_files else 'None'}"""
     })
     
     with st.chat_message("user"):
@@ -88,7 +79,19 @@ if submitted and query:
     # Display assistant response
     st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
-        st.write(answer)
+        try:
+            response_data = json.loads(answer)
+            # st.write('items:', response_data.items())
+            
+            if "explanation" in response_data:
+                st.markdown(response_data["explanation"])
+            if "files" in response_data:
+                for filename, code in response_data["files"].items():
+                    st.markdown(f"**File: `{filename}`**")
+                    st.code(code, language="python")
+                    
+        except json.JSONDecodeError:
+            st.write(answer)
 
 # Display chat history
 if st.session_state.messages:
