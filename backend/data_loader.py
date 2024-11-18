@@ -98,10 +98,9 @@ class RepositoryAnalyzer:
         contents = []
         
         for root, dirs, files in os.walk(repo_path):
-            # Filter directories
+            print("root:", root, "dirs:", dirs, "files:", files, "\n")
             dirs[:] = self._filter_directories(dirs)
             
-            # Process directories
             for dir_name in dirs:
                 dir_path = os.path.join(root, dir_name)
                 contents.append(self._create_directory_entry(dir_path))

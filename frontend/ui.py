@@ -2,16 +2,18 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+from utils import display_code_block, handle_merge_request
 
 # Load config
 try:
     with open('../config/config.json') as f:
         config = json.load(f)
-        BASE_URL = config.get('BASE_URL', "http://127.0.0.1:5001")
+        BASE_URL = config.get('BASE_URL')
 except:
     BASE_URL = "http://127.0.0.1:5001"
 
 st.title("PACE")
+
 
 # Initialize session state for file lists if not exists
 if "file_list" not in st.session_state:
@@ -80,15 +82,23 @@ if submitted and query:
     st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         try:
-            response_data = json.loads(answer)
-            # st.write('items:', response_data.items())
+            # st.write("answer:", answer)
+            if isinstance(answer, str):
+                response_data = json.loads(answer)
+            else:
+                response_data = answer
             
             if "explanation" in response_data:
-                st.markdown(response_data["explanation"])
+                print("explanation:", type(response_data["explanation"]))
+                # st.markdown(json.loads(response_data["explanation"]))
             if "files" in response_data:
                 for filename, code in response_data["files"].items():
-                    st.markdown(f"**File: `{filename}`**")
-                    st.code(code, language="python")
+                    display_code_block(
+                        filename=filename,
+                        code=code,
+                        explanation=response_data.get("explanation", ""),
+                        base_url=BASE_URL
+                    )
                     
         except json.JSONDecodeError:
             st.write(answer)

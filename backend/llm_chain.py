@@ -1,25 +1,27 @@
 import json
 from langchain_google_vertexai import ChatVertexAI
 from langchain.prompts import ChatPromptTemplate 
+from models import LLMResponse
 
 class LLMChain:
     def __init__(self, df):
         self.df = df
         self.llm = ChatVertexAI(model="gemini-1.5-pro")
+        # self.llm = self.llm.with_structured_output(LLMResponse)
         self.load_prompts()
         self.chain = self.setup_chain()
 
     def load_prompts(self):
         try:
-            with open('config/prompts_config.json', 'r') as f:
+            with open('config/codegen_prompts_config.json', 'r') as f:
                 prompts = json.load(f)
             self.system_prompt = prompts['system_prompt']
             self.prompt_components = prompts['prompt_components']
             self.prompt_template = self.create_prompt_template(prompts['prompt_template'])
         except FileNotFoundError:
-            print("prompts_config.json not found. Using default prompts.")
+            print("codegen_prompts_config.json not found. Using default prompts.")
         except json.JSONDecodeError:
-            print("Error parsing prompts_config.json. Using default prompts.")
+            print("Error parsing codegen_prompts_config.json. Using default prompts.")
 
     def create_prompt_template(self, template_string):
         return ChatPromptTemplate.from_template(template_string)
