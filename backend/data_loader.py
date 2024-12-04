@@ -16,7 +16,11 @@ class RepositoryAnalyzer:
         # Config & Data
         '.json', '.yaml', '.yml', '.toml',
         # Documentation
-        '.md', '.rst'
+        '.md', '.rst',
+        # Markdown
+        '.md',
+        # data
+        '.csv', '.jsonl', '.sql'
     }
 
     # Default extensions to exclude

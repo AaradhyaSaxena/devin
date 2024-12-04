@@ -9,7 +9,7 @@ def main():
     load_config()
     
     repo_analyzer = RepositoryAnalyzer()
-    df = repo_analyzer.analyze_repository('./codebase/')
+    df = repo_analyzer.analyze_repository('./codebase/input/')
     print(df.head())
     
     llm_chain = LLMChain(df)
