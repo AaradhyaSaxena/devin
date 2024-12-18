@@ -5,7 +5,7 @@ from langchain.prompts import ChatPromptTemplate
 class MergeChain:
     def __init__(self, df):
         self.df = df
-        self.llm = ChatVertexAI(model="gemini-1.5-pro")
+        self.llm = ChatVertexAI(model="gemini-1.5-pro-002")
         self.load_prompts()
         self.chain = self.setup_chain()
 

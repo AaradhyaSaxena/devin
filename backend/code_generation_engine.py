@@ -31,25 +31,27 @@ class CodeGenerationEngine:
                 if result.endswith('```'):
                     result = result.rsplit('\n', 1)[0]
             
+            print("result:", result)
             result = json.loads(result)
-            for filepath in result.get('files', {}).keys():
-                print("filepath:", filepath, "\n")
-                print("changes:", result.get('files', {}).get(filepath), "\n")
-            old_files = {
-                filepath: self.get_existing_file_content(filepath)
-                for filepath in result.get('files', {}).keys()
-            }
-            # Generate diffs
-            diffs = create_diff_response(old_files, result.get('files', {}))
-            # print("Result:", type(result))
-            # return result
-            response = LLMResponse(
-                explanation=json.dumps(result.get("explanation", {})),
-                files=result.get("files", {}),
-                diffs=diffs
-            )
-            # print("Responsessssss:", response)
-            return json.dumps(response.model_dump_json(), indent=2)
+            return json.dumps(result, indent=2)
+            # for filepath in result.get('files', {}).keys():
+            #     print("filepath:", filepath, "\n")
+            #     print("changes:", result.get('files', {}).get(filepath), "\n")
+            # old_files = {
+            #     filepath: self.get_existing_file_content(filepath)
+            #     for filepath in result.get('files', {}).keys()
+            # }
+            # # Generate diffs
+            # diffs = create_diff_response(old_files, result.get('files', {}))
+            # # print("Result:", type(result))
+            # # return result
+            # response = LLMResponse(
+            #     explanation=json.dumps(result.get("explanation", {})),
+            #     files=result.get("files", {}),
+            #     diffs=diffs
+            # )
+            # # print("Responsessssss:", response)
+            # return json.dumps(response.model_dump_json(), indent=2)
         except json.JSONDecodeError as e:
             print("JSON Decode Error:", str(e))
             print("Failed to parse result:", repr(result))

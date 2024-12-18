@@ -82,15 +82,42 @@ if submitted and query:
     st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         try:
-            # st.write("answer:", answer)
             if isinstance(answer, str):
                 response_data = json.loads(answer)
+                # print("loads response:", response_data)
+                # print("Type of response_data:", type(response_data))
             else:
                 response_data = answer
             
+            # Display assistant response
             if "explanation" in response_data:
-                print("explanation:", type(response_data["explanation"]))
-                # st.markdown(json.loads(response_data["explanation"]))
+                explanation = response_data["explanation"]
+                print("explanation type:", type(explanation))
+                if isinstance(explanation, str):
+                    try:
+                        # Try to parse if it's a JSON string
+                        explanation_data = json.loads(explanation)
+                        # Display each section of the explanation
+                        if "problem_analysis" in explanation_data:
+                            st.markdown("### Problem Analysis")
+                            st.markdown(explanation_data["problem_analysis"])
+                        if "solution_overview" in explanation_data:
+                            st.markdown("### Solution Overview")
+                            st.markdown(explanation_data["solution_overview"])
+                        if "considerations" in explanation_data:
+                            st.markdown("### Considerations")
+                            for consideration in explanation_data["considerations"]:
+                                st.markdown(f"- {consideration}")
+                        if "risks" in explanation_data:
+                            st.markdown("### Risks")
+                            for risk in explanation_data["risks"]:
+                                st.markdown(f"- {risk}")
+                    except json.JSONDecodeError:
+                        # If not JSON, display as plain text
+                        st.markdown(explanation)
+                else:
+                    st.markdown(str(explanation))
+                
             if "files" in response_data:
                 for filename, code in response_data["files"].items():
                     display_code_block(
