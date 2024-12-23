@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
-from utils import display_code_block, handle_merge_request, format_explanation
+from utils import display_code_block, handle_merge_request, format_explanation, display_code_changes
 
 # Load config
 try:
@@ -109,13 +109,7 @@ if submitted and query:
             with changes_tab:
                 if "files" in response_data:
                     for filename, code in response_data["files"].items():
-                        st.markdown(f"### 📄 {filename}")
-                        display_code_block(
-                            filename=filename,
-                            code=code,
-                            explanation=response_data.get("explanation", ""),
-                            base_url=BASE_URL
-                        )
+                        display_code_changes(filename, code)
             
             with testing_tab:
                 if "testing" in response_data:
@@ -140,3 +134,4 @@ if st.session_state.messages:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.write(message["content"])
+

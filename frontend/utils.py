@@ -49,6 +49,51 @@ def display_code_block(filename, code, explanation, base_url):
     
     st.code(code, language="python")
 
+def display_code_changes(filename, code_data):
+    """Helper function to display code changes in a readable format"""
+    # Create columns for the header and merge button
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(f"### 📄 {filename}")
+    with col2:
+        if st.button("Merge All Changes", key=f"merge_all_{filename}"):
+            with st.spinner("Merging changes..."):
+                # Combine all changes into a single code block
+                combined_code = "\n".join(
+                    change.get("content", "").strip()
+                    for change in code_data.get("changes", [])
+                )
+                # Get combined explanation
+                combined_explanation = "\n".join(
+                    change.get("explanation", "")
+                    for change in code_data.get("changes", [])
+                    if change.get("explanation")
+                )
+                if handle_merge_request(filename, combined_code, combined_explanation, st.session_state.base_url):
+                    st.success(f"Changes merged successfully for {filename}")
+    
+    if "changes" in code_data:
+        for change in code_data["changes"]:
+            # Display change type with appropriate emoji
+            change_type = change.get("type", "")
+            emoji = {
+                "addition": "➕",
+                "deletion": "➖",
+                "modification": "🔄"
+            }.get(change_type, "ℹ️")
+            
+            st.markdown(f"{emoji} **Line {change.get('line', '')}**")
+            
+            # Display the code content in a code block
+            content = change.get("content", "").strip()
+            st.code(content, language=filename.split('.')[-1])
+            
+            # Display explanation if available
+            if explanation := change.get("explanation"):
+                st.info(explanation)
+            
+            st.divider()
+
 def format_explanation(explanation_data):
     """Helper function to format explanation sections with better styling"""
     if "problem_analysis" in explanation_data:
