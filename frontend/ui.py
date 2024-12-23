@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
-from utils import display_code_block, handle_merge_request
+from utils import display_code_block, handle_merge_request, format_explanation
 
 # Load config
 try:
@@ -84,52 +84,54 @@ if submitted and query:
         try:
             if isinstance(answer, str):
                 response_data = json.loads(answer)
-                # print("loads response:", response_data)
-                # print("Type of response_data:", type(response_data))
             else:
                 response_data = answer
             
-            # Display assistant response
-            if "explanation" in response_data:
-                explanation = response_data["explanation"]
-                print("explanation type:", type(explanation))
-                if isinstance(explanation, str):
-                    try:
-                        # Try to parse if it's a JSON string
-                        explanation_data = json.loads(explanation)
-                        # Display each section of the explanation
-                        if "problem_analysis" in explanation_data:
-                            st.markdown("### Problem Analysis")
-                            st.markdown(explanation_data["problem_analysis"])
-                        if "solution_overview" in explanation_data:
-                            st.markdown("### Solution Overview")
-                            st.markdown(explanation_data["solution_overview"])
-                        if "considerations" in explanation_data:
-                            st.markdown("### Considerations")
-                            for consideration in explanation_data["considerations"]:
-                                st.markdown(f"- {consideration}")
-                        if "risks" in explanation_data:
-                            st.markdown("### Risks")
-                            for risk in explanation_data["risks"]:
-                                st.markdown(f"- {risk}")
-                    except json.JSONDecodeError:
-                        # If not JSON, display as plain text
-                        st.markdown(explanation)
-                else:
-                    st.markdown(str(explanation))
-                
-            if "files" in response_data:
-                print("response_data:", response_data)
-                for filename, code in response_data["files"].items():
-                    display_code_block(
-                        filename=filename,
-                        code=code,
-                        explanation=response_data.get("explanation", ""),
-                        base_url=BASE_URL
-                    )
-                    
+            # Create tabs for better organization
+            explanation_tab, changes_tab, testing_tab = st.tabs([
+                "📝 Explanation", 
+                "🔄 Code Changes", 
+                "🧪 Testing"
+            ])
+            
+            with explanation_tab:
+                if "explanation" in response_data:
+                    explanation = response_data["explanation"]
+                    if isinstance(explanation, str):
+                        try:
+                            explanation_data = json.loads(explanation)
+                            format_explanation(explanation_data)
+                        except json.JSONDecodeError:
+                            st.markdown(explanation)
+                    else:
+                        format_explanation(explanation)
+            
+            with changes_tab:
+                if "files" in response_data:
+                    for filename, code in response_data["files"].items():
+                        st.markdown(f"### 📄 {filename}")
+                        display_code_block(
+                            filename=filename,
+                            code=code,
+                            explanation=response_data.get("explanation", ""),
+                            base_url=BASE_URL
+                        )
+            
+            with testing_tab:
+                if "testing" in response_data:
+                    testing = response_data["testing"]
+                    if "required_tests" in testing:
+                        st.markdown("### Required Tests")
+                        for test in testing["required_tests"]:
+                            st.markdown(f"- {test}")
+                    if "validation_steps" in testing:
+                        st.markdown("### Validation Steps")
+                        for step in testing["validation_steps"]:
+                            st.markdown(f"- {step}")
+                        
         except json.JSONDecodeError:
-            st.write(answer)
+            st.error("Failed to parse response")
+            st.code(answer)
 
 # Display chat history
 if st.session_state.messages:

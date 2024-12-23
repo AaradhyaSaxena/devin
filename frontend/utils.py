@@ -48,3 +48,23 @@ def display_code_block(filename, code, explanation, base_url):
                     st.success(f"Changes merged successfully for {filename}")
     
     st.code(code, language="python")
+
+def format_explanation(explanation_data):
+    """Helper function to format explanation sections with better styling"""
+    if "problem_analysis" in explanation_data:
+        st.markdown("### 🔍 Problem Analysis")
+        st.info(explanation_data["problem_analysis"])
+    
+    if "solution_overview" in explanation_data:
+        st.markdown("### 💡 Solution Overview")
+        st.success(explanation_data["solution_overview"])
+    
+    if "considerations" in explanation_data:
+        st.markdown("### ⚖️ Key Considerations")
+        for consideration in explanation_data["considerations"]:
+            st.markdown(f"- {consideration}")
+    
+    if "risks" in explanation_data:
+        st.markdown("### ⚠️ Potential Risks")
+        for risk in explanation_data["risks"]:
+            st.write("- " + risk)
