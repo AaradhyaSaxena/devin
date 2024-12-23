@@ -119,6 +119,7 @@ if submitted and query:
                     st.markdown(str(explanation))
                 
             if "files" in response_data:
+                print("response_data:", response_data)
                 for filename, code in response_data["files"].items():
                     display_code_block(
                         filename=filename,
