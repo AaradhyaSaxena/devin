@@ -2,16 +2,18 @@ import streamlit as st
 import pandas as pd
 import requests
 import json
+from utils import display_code_block, handle_merge_request, format_explanation, display_code_changes
 
 # Load config
 try:
     with open('../config/config.json') as f:
         config = json.load(f)
-        BASE_URL = config.get('BASE_URL', "http://127.0.0.1:5001")
+        BASE_URL = config.get('BASE_URL')
 except:
     BASE_URL = "http://127.0.0.1:5001"
 
 st.title("PACE")
+
 
 # Initialize session state for file lists if not exists
 if "file_list" not in st.session_state:
@@ -80,18 +82,50 @@ if submitted and query:
     st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
         try:
-            response_data = json.loads(answer)
-            # st.write('items:', response_data.items())
+            if isinstance(answer, str):
+                response_data = json.loads(answer)
+            else:
+                response_data = answer
             
-            if "explanation" in response_data:
-                st.markdown(response_data["explanation"])
-            if "files" in response_data:
-                for filename, code in response_data["files"].items():
-                    st.markdown(f"**File: `{filename}`**")
-                    st.code(code, language="python")
-                    
+            # Create tabs for better organization
+            explanation_tab, changes_tab, testing_tab = st.tabs([
+                "📝 Explanation", 
+                "🔄 Code Changes", 
+                "🧪 Testing"
+            ])
+            
+            with explanation_tab:
+                if "explanation" in response_data:
+                    explanation = response_data["explanation"]
+                    if isinstance(explanation, str):
+                        try:
+                            explanation_data = json.loads(explanation)
+                            format_explanation(explanation_data)
+                        except json.JSONDecodeError:
+                            st.markdown(explanation)
+                    else:
+                        format_explanation(explanation)
+            
+            with changes_tab:
+                if "files" in response_data:
+                    for filename, code in response_data["files"].items():
+                        display_code_changes(filename, code)
+            
+            with testing_tab:
+                if "testing" in response_data:
+                    testing = response_data["testing"]
+                    if "required_tests" in testing:
+                        st.markdown("### Required Tests")
+                        for test in testing["required_tests"]:
+                            st.markdown(f"- {test}")
+                    if "validation_steps" in testing:
+                        st.markdown("### Validation Steps")
+                        for step in testing["validation_steps"]:
+                            st.markdown(f"- {step}")
+                        
         except json.JSONDecodeError:
-            st.write(answer)
+            st.error("Failed to parse response")
+            st.code(answer)
 
 # Display chat history
 if st.session_state.messages:
@@ -100,3 +134,4 @@ if st.session_state.messages:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.write(message["content"])
+

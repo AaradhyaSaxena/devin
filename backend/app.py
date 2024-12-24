@@ -49,6 +49,17 @@ class APP:
                 reference_filepaths=reference_filepaths
             )
             return jsonify({"code": result})
+        
+        @self.app.route('/merge_code', methods=['POST'])
+        def merge_code():
+            data = request.json
+            filename = data.get('filename')
+            suggested_changes = data.get('suggested_changes')
+            explanation = data.get('explanation')
+            result = self.code_generation_engine.merge_code(filename, suggested_changes, explanation)
+
+            ### TODO: trigger the merge flow job, deep's code integration needed
+            return jsonify({"message": "Merge flow triggered", "code": result})
 
     def run(self):
         self.app.run(port=self.port)
